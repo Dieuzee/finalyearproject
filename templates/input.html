@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block title %}BID CROP DETECTOR — Upload{% endblock title %} {%
 block body %}
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <style>
   /* ── tokens ── */
@@ -12,12 +12,12 @@ block body %}
     --ink-muted: #a3a3a3;
     --border: #e8e6e1;
     --border-hover: #c4c1ba;
-    --accent: #3d7c4a;
-    --accent-hover: #326640;
-    --accent-light: rgba(61, 124, 74, 0.06);
+    --accent: #16a34a;
+    --accent-hover: #14532d;
+    --accent-light: rgba(22, 163, 74, 0.07);
     --radius: 12px;
-    --font: 'DM Sans', system-ui, -apple-system, sans-serif;
-    --font-display: 'Playfair Display', Georgia, serif;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
     --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
     --shadow-hover: 0 2px 8px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.1);
     --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -333,7 +333,7 @@ block body %}
           <p class="dropbox-label">
             Drag your image here, or <strong id="browseTrigger">browse</strong>
           </p>
-          <p class="dropbox-formats">JPG, PNG or GIF — up to 16 MB</p>
+          <p class="dropbox-formats">JPG, PNG or WEBP — up to 16 MB</p>
         </div>
         <img id="imgPreview" alt="Selected image preview" />
       </div>
@@ -344,7 +344,7 @@ block body %}
       <div>
         <h2 class="page-heading">Detect crop disease</h2>
         <p class="page-sub">
-          Upload a photo of an affected leaf and our model will identify the disease and suggest treatment.
+          Upload a photo of an affected leaf and our AI will identify the crop, the disease, and how to treat it.
         </p>
       </div>
 
@@ -376,12 +376,15 @@ block body %}
 
       <div>
         <p class="tip-text" style="margin: 0 0 8px; font-weight: 500; color: var(--ink-soft);">
-          Supported crops
+          Works with any crop
         </p>
         <div class="crop-list">
-          <span class="crop-chip">Corn (Maize)</span>
-          <span class="crop-chip">Grape</span>
+          <span class="crop-chip">Corn</span>
           <span class="crop-chip">Tomato</span>
+          <span class="crop-chip">Grape</span>
+          <span class="crop-chip">Cassava</span>
+          <span class="crop-chip">Pepper</span>
+          <span class="crop-chip">&amp; more</span>
         </div>
       </div>
 
