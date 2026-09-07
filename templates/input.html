@@ -315,6 +315,52 @@ block body %}
   @keyframes slideIn {
     from { opacity: 0; transform: translateY(-6px); }
   }
+
+  /* ── live camera ── */
+  .dropbox.has-camera { border: 2px solid var(--accent); padding: 6px; background: #000; }
+  .dropbox.has-camera .dropbox-content { display: none; }
+  #cameraStream {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    display: none;
+    background: #000;
+  }
+  .dropbox.has-camera #cameraStream { display: block; }
+
+  .cam-controls {
+    display: none;
+    gap: 10px;
+    width: 100%;
+  }
+  .cam-controls.active { display: flex; }
+  .cam-controls .btn-analyze { margin: 0; }
+  .btn-cancel {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 14px 18px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--ink-soft);
+    font-family: var(--font);
+    font-size: 0.9rem; font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .btn-cancel:hover { border-color: var(--border-hover); color: var(--ink); background: #f7f7f4; }
+
+  .cam-error {
+    font-size: 0.82rem;
+    color: #991b1b;
+    background: #fef3f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: none;
+  }
+  .cam-error.active { display: block; }
 </style>
 
 <section class="page-wrap">
@@ -336,6 +382,7 @@ block body %}
           <p class="dropbox-formats">JPG, PNG or WEBP — up to 16 MB</p>
         </div>
         <img id="imgPreview" alt="Selected image preview" />
+        <video id="cameraStream" playsinline autoplay muted></video>
       </div>
     </div>
 
@@ -351,7 +398,7 @@ block body %}
       <form method="POST" action="/upload" enctype="multipart/form-data" id="uploadForm">
         <input id="fileInput" name="file" type="file" accept="image/*" hidden required />
 
-        <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div style="display: flex; flex-direction: column; gap: 12px;" id="mainControls">
           <div class="file-label" id="fileLabel">No file selected</div>
 
           <button type="submit" class="btn-analyze" id="analyzeBtn" disabled>
@@ -362,15 +409,39 @@ block body %}
             Analyze leaf
           </button>
         </div>
+
+        <!-- Live camera capture controls (shown while the camera is on) -->
+        <div class="cam-controls" id="camControls">
+          <button type="button" class="btn-analyze" id="captureBtn">
+            <svg viewBox="0 0 24 24">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg>
+            Capture
+          </button>
+          <button type="button" class="btn-cancel" id="cancelCamBtn">Cancel</button>
+        </div>
+
+        <div class="cam-error" id="camError"></div>
       </form>
 
-      <button class="btn-browse" id="browseBtn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-        </svg>
-        Choose from files
-      </button>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-browse" id="browseBtn" style="flex: 1; min-width: 140px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+          Choose from files
+        </button>
+        <button class="btn-browse" id="cameraBtn" style="flex: 1; min-width: 140px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          Use camera
+        </button>
+      </div>
 
       <div class="sep"></div>
 
@@ -420,7 +491,11 @@ block body %}
   const browseBtn  = document.getElementById('browseBtn');
   const browseTrig = document.getElementById('browseTrigger');
 
-  function openPicker() { fileInput.click(); }
+  function openPicker() {
+    // Don't hijack clicks while the live camera is showing.
+    if (dropbox.classList.contains('has-camera')) return;
+    fileInput.click();
+  }
 
   function showFile(file) {
     if (!file) return;
@@ -445,6 +520,91 @@ block body %}
   fileInput.addEventListener('change', function () {
     showFile(this.files && this.files[0]);
   });
+
+  // ── Live camera capture ──
+  const cameraBtn   = document.getElementById('cameraBtn');
+  const captureBtn  = document.getElementById('captureBtn');
+  const cancelCamBtn= document.getElementById('cancelCamBtn');
+  const video       = document.getElementById('cameraStream');
+  const camControls = document.getElementById('camControls');
+  const mainControls= document.getElementById('mainControls');
+  const camError    = document.getElementById('camError');
+  let stream = null;
+
+  function showCamError(msg) {
+    camError.textContent = msg;
+    camError.classList.add('active');
+  }
+  function clearCamError() {
+    camError.textContent = '';
+    camError.classList.remove('active');
+  }
+
+  async function startCamera() {
+    clearCamError();
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showCamError("Your browser doesn't support live camera capture. Please upload a photo instead.");
+      return;
+    }
+    try {
+      // Prefer the rear camera on phones; fall back to any camera.
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' } }, audio: false
+        });
+      } catch (e) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+      video.srcObject = stream;
+      dropbox.classList.remove('has-file');
+      dropbox.classList.add('has-camera');
+      preview.style.display = 'none';
+      camControls.classList.add('active');
+      mainControls.style.display = 'none';
+    } catch (err) {
+      if (err && (err.name === 'NotAllowedError' || err.name === 'SecurityError')) {
+        showCamError('Camera permission was blocked. Allow camera access in your browser, or upload a photo instead.');
+      } else if (err && err.name === 'NotFoundError') {
+        showCamError('No camera was found on this device. Please upload a photo instead.');
+      } else {
+        showCamError('Could not start the camera. Please upload a photo instead.');
+      }
+    }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      stream = null;
+    }
+    video.srcObject = null;
+    dropbox.classList.remove('has-camera');
+    camControls.classList.remove('active');
+    mainControls.style.display = '';
+  }
+
+  function capturePhoto() {
+    if (!video.videoWidth) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob(function (blob) {
+      if (!blob) { showCamError('Could not capture the photo. Please try again.'); return; }
+      const file = new File([blob], 'camera-capture-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+      const transfer = new DataTransfer();
+      transfer.items.add(file);
+      fileInput.files = transfer.files;
+      stopCamera();
+      showFile(file);
+    }, 'image/jpeg', 0.92);
+  }
+
+  cameraBtn.addEventListener('click', startCamera);
+  captureBtn.addEventListener('click', capturePhoto);
+  cancelCamBtn.addEventListener('click', function () { clearCamError(); stopCamera(); });
+  // Release the camera if the user leaves the page.
+  window.addEventListener('pagehide', stopCamera);
 
   // Drag & Drop
   ['dragenter', 'dragover'].forEach(function (evt) {
