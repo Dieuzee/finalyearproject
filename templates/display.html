@@ -4,25 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>BID CROP DETECTOR • Diagnosis Results</title>
-    <meta
-      name="description"
-      content="AI-powered plant disease diagnosis delivered with cinematic flair."
-    />
+    <meta name="description" content="AI-powered plant disease diagnosis." />
 
-    <!--  Google font (only 1 request)  -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300..900&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
 
-    <!--  Tiny color-scheme toggle  -->
     <script>
       window.matchMedia("(prefers-color-scheme: dark)").matches &&
         document.documentElement.classList.add("dark");
     </script>
 
     <style>
-      /*  Design tokens  */
       :root {
         --bg: #f0f4f8;
         --bg-glass: rgba(255, 255, 255, 0.55);
@@ -30,6 +24,7 @@
         --accent: #00d2a8;
         --accent-dark: #00a884;
         --danger: #ff3b5c;
+        --warn: #f5a623;
         --muted: #6b7a88;
         --radius: 24px;
         --font: "Inter", system-ui, -apple-system;
@@ -44,7 +39,6 @@
         --muted: #a0aec0;
       }
 
-      /*  Reset  */
       *,
       *::before,
       *::after {
@@ -64,7 +58,6 @@
         overflow-x: hidden;
       }
 
-      /*  Card shell  */
       .card {
         width: 100%;
         max-width: 1100px;
@@ -75,7 +68,7 @@
         backdrop-filter: blur(20px) saturate(180%);
         box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15),
           0 0 0 1px rgba(255, 255, 255, 0.1);
-        animation: fadeIn 1s ease;
+        animation: fadeIn 0.8s ease;
         overflow: hidden;
       }
       @keyframes fadeIn {
@@ -85,7 +78,6 @@
         }
       }
 
-      /*  Left side  */
       .image-side {
         position: relative;
         min-height: 60vh;
@@ -104,10 +96,38 @@
         object-fit: cover;
         border-radius: var(--radius);
         box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.2);
-        transition: transform 0.4s;
       }
-      .image:hover {
-        transform: scale(1.03);
+
+      .info {
+        padding: 3rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.4rem;
+      }
+      h1 {
+        font-size: 2.2rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+      }
+      .confidence-and-label-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      .label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 1.15rem;
+      }
+      .label svg {
+        width: 20px;
+        height: 20px;
+        fill: currentColor;
+        flex-shrink: 0;
       }
       .badge {
         font-size: 0.9rem;
@@ -115,39 +135,12 @@
         padding: 0.5rem 1rem;
         border-radius: 999px;
         color: #fff;
+        white-space: nowrap;
         background: linear-gradient(90deg, var(--accent), var(--accent-dark));
         box-shadow: 0 4px 12px -2px var(--accent);
       }
-
-      /*  Right side  */
-      .info {
-        padding: 3rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        gap: 1.5rem;
-      }
-      h1 {
-        font-size: 2.2rem;
-        font-weight: 900;
-        letter-spacing: -0.02em;
-      }
-      .subtitle {
-        font-size: 1rem;
-        color: var(--muted);
-      }
-      .label {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-weight: 700;
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
-      }
-      .label svg {
-        width: 20px;
-        height: 20px;
-        fill: currentColor;
+      .badge.healthy {
+        background: linear-gradient(90deg, #3ddc84, #17a866);
       }
       .progress {
         height: 6px;
@@ -158,43 +151,28 @@
       .progress > i {
         height: 100%;
         display: block;
+        width: 0;
         background: linear-gradient(90deg, var(--accent), var(--accent-dark));
         border-radius: 999px;
-        transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transition: width 1.1s cubic-bezier(0.34, 1.56, 0.64, 1);
       }
-      .details {
-        font-size: 0.9rem;
-        line-height: 1.7;
-        max-height: 280px;
-        overflow-y: auto;
-        padding-right: 0.5rem;
-      }
-      .details::-webkit-scrollbar {
-        width: 4px;
-      }
-      .details::-webkit-scrollbar-thumb {
-        background: var(--accent);
-        border-radius: 4px;
-      }
-      .details h4 {
-        margin: 0.8rem 0 0.3rem;
+      .summary {
         font-size: 1rem;
-      }
-      .details ul {
-        margin-left: 1.2rem;
-      }
-      .gemini-guidance {
-        white-space: pre-line;
-        border-left: 3px solid var(--accent);
-        padding: 0.8rem 0 0.8rem 1rem;
-        font-size: 0.9rem;
         line-height: 1.6;
       }
-      .gemini-guidance strong {
-        display: block;
-        margin-bottom: 0.4rem;
-        color: var(--accent-dark);
+      .pill {
+        display: inline-block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        padding: 0.25rem 0.75rem;
+        border-radius: 999px;
+        border: 1px solid var(--muted);
+        color: var(--muted);
       }
+      .pill.sev-Mild { color: var(--accent-dark); border-color: var(--accent-dark); }
+      .pill.sev-Moderate { color: var(--warn); border-color: var(--warn); }
+      .pill.sev-Severe { color: var(--danger); border-color: var(--danger); }
       .treatment {
         font-size: 0.95rem;
         line-height: 1.6;
@@ -202,38 +180,44 @@
         border-radius: 12px;
         padding: 0.9rem 1.1rem;
       }
-      .treatment strong {
-        color: var(--accent-dark);
+      .treatment strong { color: var(--accent-dark); }
+      .details {
+        font-size: 0.9rem;
+        line-height: 1.65;
+        max-height: 260px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
       }
+      .details::-webkit-scrollbar { width: 4px; }
+      .details::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 4px; }
+      .details h4 { font-size: 0.95rem; margin-bottom: 0.15rem; }
+      .details p { color: var(--muted); }
       .notice {
         border-radius: 16px;
         padding: 1.4rem 1.5rem;
         background: rgba(255, 59, 92, 0.06);
         border: 1px solid rgba(255, 59, 92, 0.25);
       }
-      .notice-uncertain {
-        background: rgba(255, 176, 32, 0.08);
-        border-color: rgba(255, 176, 32, 0.35);
+      .notice-uncertain,
+      .notice-unconfigured {
+        background: rgba(245, 166, 35, 0.08);
+        border-color: rgba(245, 166, 35, 0.35);
       }
-      .notice-title {
-        font-weight: 800;
-        font-size: 1.2rem;
-        margin-bottom: 0.5rem;
+      .notice-title { font-weight: 800; font-size: 1.2rem; margin-bottom: 0.5rem; }
+      .notice-body { font-size: 0.95rem; line-height: 1.6; color: var(--muted); }
+      .notice-body code {
+        font-family: var(--mono);
+        background: rgba(0, 0, 0, 0.08);
+        padding: 0.1rem 0.35rem;
+        border-radius: 5px;
       }
-      .notice-body {
-        font-size: 0.95rem;
-        line-height: 1.6;
-        color: var(--muted);
-      }
-      .disclaimer {
-        font-size: 0.78rem;
-        line-height: 1.5;
-        color: var(--muted);
-        opacity: 0.85;
-      }
+      .disclaimer { font-size: 0.78rem; line-height: 1.5; color: var(--muted); opacity: 0.85; }
       .btn {
         align-self: flex-start;
-        margin-top: 0.5rem;
+        margin-top: 0.3rem;
         padding: 0.9rem 1.8rem;
         border: none;
         border-radius: 999px;
@@ -249,38 +233,21 @@
         box-shadow: 0 10px 25px -8px var(--accent);
       }
 
-      /*  Responsive  */
       @media (max-width: 900px) {
-        .card {
-          grid-template-columns: 1fr;
-        }
-        .image-side {
-          min-height: 40vh;
-        }
-      }
-
-      .confidence-and-label-container {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin: 0 0 20px 0;
+        .card { grid-template-columns: 1fr; }
+        .image-side { min-height: 40vh; }
+        .info { padding: 2rem; }
       }
     </style>
   </head>
 
   <body>
-    <main
-      class="card"
-      id="card-root"
-      data-status="{{ status|default('error') }}"
-      data-label="{{ label|default('') }}"
-      data-confidence="{{ confidence|default(0) }}"
-    >
+    <main class="card">
       <!--  Image side  -->
       <div class="image-side">
         <img
           src="{{ url_for('static', filename='shots/' ~ variable_name) }}"
-          alt="Crop sample"
+          alt="Uploaded crop sample"
           class="image"
           loading="eager"
         />
@@ -288,28 +255,29 @@
 
       <!--  Info side  -->
       <div class="info">
-        <div>
-          <h1>Crop<span style="color: var(--accent)">Scan</span></h1>
-        </div>
+        <h1>Crop<span style="color: var(--accent)">Scan</span></h1>
 
         {% if status == 'ok' %}
-        <!--  Confident diagnosis  -->
         <div>
           <div class="confidence-and-label-container">
             <div class="label">
               <svg viewBox="0 0 24 24">
-                <path
-                  d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
-                />
+                <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
-              <span id="label-name">{{ crop }} — {{ disease }}</span>
+              <span>{{ crop }} — {{ disease }}</span>
             </div>
-            <div class="badge" id="confidence-badge">
-              {{ (confidence|float)|round(2) }}%
+            <div class="badge {% if healthy %}healthy{% endif %}" id="confidence-badge">
+              {{ confidence }}%
             </div>
           </div>
-          <div class="progress"><i id="bar"></i></div>
+          <div class="progress"><i id="bar" data-confidence="{{ confidence }}"></i></div>
         </div>
+
+        {% if severity and severity|lower != 'none' %}
+        <div><span class="pill sev-{{ severity }}">Severity: {{ severity }}</span></div>
+        {% endif %}
+
+        {% if summary %}<p class="summary">{{ summary }}</p>{% endif %}
 
         {% if treatment %}
         <div class="treatment">
@@ -317,30 +285,37 @@
         </div>
         {% endif %}
 
-        {% if gemini_guidance %}
-        <div class="gemini-guidance" id="gemini-guidance">
-          <strong>AI assistant notes</strong>
-          {{ gemini_guidance }}
+        <div class="details">
+          {% if symptoms %}
+          <div><h4>Symptoms</h4><p>{{ symptoms }}</p></div>
+          {% endif %}
+          {% if prevention %}
+          <div><h4>Prevention</h4><p>{{ prevention }}</p></div>
+          {% endif %}
         </div>
-        {% endif %}
-
-        <div class="details" id="details">Loading details…</div>
 
         {% else %}
-        <!--  Not a leaf / uncertain / error  -->
+        <!--  not_leaf / unconfigured / error  -->
         <div class="notice notice-{{ status }}">
           <div class="notice-title">
-            {% if status == 'not_leaf' %}This doesn't look like a crop leaf
-            {% elif status == 'uncertain' %}Not confident about this image
+            {% if status == 'not_leaf' %}This doesn't look like a plant leaf
+            {% elif status == 'unconfigured' %}AI diagnosis isn't set up yet
             {% else %}Something went wrong{% endif %}
           </div>
+          {% if status == 'unconfigured' %}
+          <p class="notice-body">
+            Add your Gemini API key to a <code>.env</code> file in the project
+            (<code>GEMINI_API_KEY=your_key</code>) and restart the app.
+          </p>
+          {% else %}
           <p class="notice-body">{{ message }}</p>
+          {% endif %}
         </div>
         {% endif %}
 
         <p class="disclaimer">
-          This tool recognises diseases of corn, grape, and tomato leaves only.
-          Results are AI estimates — confirm with a local agronomist before treating crops.
+          Results are AI estimates from Google Gemini and can be wrong — confirm with a
+          local agronomist before treating crops, and always follow product labels.
         </p>
 
         <button class="btn" onclick="window.location.href='/input'">
@@ -350,168 +325,13 @@
     </main>
 
     <script>
-      /* ---------- Disease encyclopedia ---------- */
-      const guide = {
-        "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
-          occurrence:
-            "Fungus *Cercospora zeae-maydis* loves warm (25-30 °C) humid weather.",
-          symptoms: "Narrow gray-tan lesions with dark margins on leaves.",
-          spread: "Wind-borne spores from crop residue.",
-          management:
-            "Rotate crops, use resistant hybrids, apply fungicides at tasseling.",
-          prevention:
-            "Plow residues, wider rows, early planting in risky regions.",
-        },
-
-        "Corn_(maize)___Common_rust_": {
-          occurrence:
-            "Fungus *Puccinia sorghi*, cool (15-23 °C) moist conditions.",
-          symptoms: "Orange-red pustules on both leaf surfaces.",
-          spread: "Long-distance wind-borne spores.",
-          management: "Resistant cultivars + early fungicide.",
-          prevention: "Avoid late planting, rotate crops.",
-        },
-
-        "Corn_(maize)___Northern_Leaf_Blight": {
-          occurrence:
-            "Fungus *Exserohilum turcicum*, moderate temps + long leaf wetness.",
-          symptoms: "Cigar-shaped gray-green lesions.",
-          spread: "Spores via wind/rain from residues.",
-          management:
-            "Resistant hybrids, crop rotation, residue burial, fungicides.",
-          prevention: "Sanitation, airflow, timely sowing.",
-        },
-
-        "Corn_(maize)___healthy": {
-          occurrence: "No pathogen detected.",
-          symptoms: "Normal green foliage.",
-          management: "Balanced nutrition, good irrigation.",
-          prevention: "Regular scouting & rotation.",
-        },
-
-        Grape___Black_rot: {
-          occurrence: "Fungus *Guignardia bidwellii* in warm wet weather.",
-          symptoms: "Brown leaf spots, black shriveled berries (mummies).",
-          spread: "Spores from mummies during rain.",
-          management: "Remove mummies, fungicides at bloom.",
-          prevention: "Airflow training, debris removal.",
-        },
-
-        "Grape___Esca_(Black_Measles)": {
-          occurrence: "Multiple fungi invade pruning wounds.",
-          symptoms: "Tiger-stripe leaves, bitter berries, internal wood rot.",
-          management: "Sanitize tools, wound protectants, irrigation.",
-          prevention: "Avoid large wet-season pruning.",
-        },
-
-        "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": {
-          occurrence: "Fungus *Pseudocercospora vitis* in humid climates.",
-          symptoms: "Angular brown spots with yellow halos.",
-          management: "Increase airflow, preventive fungicides.",
-          prevention: "Proper spacing & weed control.",
-        },
-
-        Grape___healthy: {
-          occurrence: "No infection.",
-          symptoms: "Normal growth.",
-          management: "Maintain hygiene.",
-          prevention: "Routine monitoring.",
-        },
-
-        Tomato___Bacterial_spot: {
-          occurrence: "Bacteria *Xanthomonas* in warm wet fields.",
-          symptoms: "Water-soaked leaf spots with yellow halos, scabby fruit.",
-          spread: "Rain splash, tools, seeds.",
-          management: "Copper sprays, certified seed.",
-          prevention: "3-4 yr rotation, tool disinfection.",
-        },
-
-        Tomato___Early_blight: {
-          occurrence: "Fungus *Alternaria solani* in warm humidity.",
-          symptoms: "Target-like lesions on older leaves & fruit.",
-          management: "Crop rotation, staking, fungicides.",
-          prevention: "Resistant varieties, soil-level irrigation.",
-        },
-
-        Tomato___Late_blight: {
-          occurrence: "Oomycete *Phytophthora infestans*, cool wet weather.",
-          symptoms: "Large water-soaked lesions with white mold.",
-          management: "Destroy infected plants, systemic fungicides.",
-          prevention: "Resistant hybrids, mulch to reduce splash.",
-        },
-
-        Tomato___Leaf_Mold: {
-          occurrence:
-            "Fungus *Cladosporium fulvum*, high humidity greenhouses.",
-          symptoms: "Yellow upper spots, olive mold underneath.",
-          management: "Ventilation + fungicides.",
-          prevention: "Spacing, humidity control.",
-        },
-
-        Tomato___Septoria_leaf_spot: {
-          occurrence: "Fungus *Septoria lycopersici*, warm wet season.",
-          symptoms: "Small circular gray-centered lesions.",
-          management: "Remove infected leaves, fungicides.",
-          prevention: "Stake plants, soil irrigation.",
-        },
-
-        "Tomato___Spider_mites Two-spotted_spider_mite": {
-          occurrence: "Mite *Tetranychus urticae* in hot dry conditions.",
-          symptoms: "Yellow speckles, bronzing, fine webbing.",
-          management: "Miticides, neem oil, predatory mites.",
-          prevention: "Adequate irrigation, avoid broad-spectrum pesticides.",
-        },
-
-        Tomato___Target_Spot: {
-          occurrence: "Fungus *Corynespora cassiicola* in humid tropics.",
-          symptoms: "Target-like spots on leaves & fruit.",
-          management: "Spacing, debris removal, fungicides.",
-          prevention: "Crop rotation, pruning lower leaves.",
-        },
-
-        Tomato___Tomato_Yellow_Leaf_Curl_Virus: {
-          occurrence: "Begomovirus spread by whiteflies (*Bemisia tabaci*).",
-          symptoms: "Severe leaf curling, yellowing, stunted growth.",
-          management: "Remove infected plants, control whiteflies with insecticides.",
-          prevention: "Resistant varieties, reflective mulches, whitefly traps.",
-        },
-      };
-
-      /* ---------- Populate ---------- */
-      (() => {
-        const root = document.getElementById("card-root");
-        const status = root.dataset.status;
-        const label = root.dataset.label;
-        const conf = parseFloat(root.dataset.confidence || "0");
-        const bar = document.getElementById("bar");
-        const details = document.getElementById("details");
-
-        // These elements only exist for a confident ('ok') result.
-        if (status !== "ok" || !bar || !details) return;
-
-        // Animate progress
-        bar.style.width =
-          (isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 0) + "%";
-
-        // Render encyclopedia
-        if (guide[label]) {
-          let html = "";
-          Object.entries(guide[label]).forEach(([key, val]) => {
-            html += `<h4>${key.charAt(0).toUpperCase() + key.slice(1)}</h4>`;
-            if (typeof val === "object") {
-              html += "<ul>";
-              Object.entries(val).forEach(
-                ([k, v]) => (html += `<li><strong>${k}:</strong> ${v}</li>`)
-              );
-              html += "</ul>";
-            } else {
-              html += `<p>${val}</p>`;
-            }
-          });
-          details.innerHTML = html;
-        } else {
-          details.innerHTML = "<p>No further information available.</p>";
-        }
+      (function () {
+        var bar = document.getElementById("bar");
+        if (!bar) return;
+        var conf = parseFloat(bar.dataset.confidence || "0");
+        conf = isFinite(conf) ? Math.max(0, Math.min(100, conf)) : 0;
+        // Animate on next frame so the transition runs.
+        requestAnimationFrame(function () { bar.style.width = conf + "%"; });
       })();
     </script>
   </body>
