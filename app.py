@@ -203,11 +203,20 @@ def input():
     return render_template("input.html")
 
 
-def render_result(fname):
-    """Analyse a saved file with Gemini and render the results page."""
+# Cache of the most recent analysis so re-viewing /display does not call Gemini again.
+_last = {"filename": None, "result": None}
+
+
+def analyze_and_cache(fname):
+    """Analyse a saved file with Gemini and remember the result for /display."""
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], fname)
     result = analyze_with_gemini(image_path)
-    return render_template('display.html', variable_name=fname, **result)
+    # Only cache meaningful results. A transient 'error' (rate limit / network)
+    # is not cached, so re-opening /display will retry instead of showing a stale error.
+    if result.get("status") != "error":
+        _last["filename"] = fname
+        _last["result"] = result
+    return result
 
 
 @app.route('/upload', methods=['GET', 'POST'])
@@ -231,7 +240,8 @@ def upload():
         filename = secure_filename(file.filename)
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(save_path)
-        return render_result(filename)
+        result = analyze_and_cache(filename)  # fresh upload -> one Gemini call
+        return render_template('display.html', variable_name=filename, **result)
     else:
         flash("Allowed image types are - png, jpg, jpeg, webp.")
         return redirect('/input')
@@ -242,7 +252,12 @@ def display_image():
     if not filename:
         flash("No image to display.")
         return redirect('/input')
-    return render_result(filename)
+    # Reuse the cached result for the current image instead of calling Gemini again.
+    if _last["filename"] == filename and _last["result"] is not None:
+        result = _last["result"]
+    else:
+        result = analyze_and_cache(filename)
+    return render_template('display.html', variable_name=filename, **result)
 
 
 if __name__ == "__main__":
