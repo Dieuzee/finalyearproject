@@ -1,12 +1,20 @@
+# Virtualenvs
 venv/
+.venv/
+
+# Python caches
 __pycache__/
+*.pyc
+
+# Git
 .git/
 .gitattributes
 .gitignore
 .dockerignore
 Dockerfile
+docker-compose.yml
 
-# Model files - no longer used (diagnosis is done via the Gemini API)
+# Model files - no longer used (diagnosis is done via an Ollama vision model)
 *.h5
 
 # Training data & scripts (not needed for serving)
@@ -14,13 +22,11 @@ Main_folder/
 camera.py
 inspect_model.py
 
-# Runtime-generated uploads
-static/shots/*.png
-static/shots/*.jpg
-static/shots/*.jpeg
-static/shots/*.gif
+# Runtime-generated uploads (any case)
+static/shots/*
 
-# Misc
-*.pyc
+# Secrets & OS cruft - never copy the real key into the image
 .env
+.env.*
+!.env.example
 .DS_Store

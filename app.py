@@ -3,11 +3,11 @@ import json
 import time
 from flask import Flask, render_template, request, flash, redirect
 from werkzeug.utils import secure_filename
-import google.genai as genai
-from google.genai import types
+import ollama
 
 # Load environment variables from a local .env file if present (optional).
-# This is where GEMINI_API_KEY lives - the app uses Gemini for all diagnosis.
+# This is where the Ollama settings live - the app uses a local Ollama
+# vision model for all diagnosis.
 try:
     from dotenv import load_dotenv
     load_dotenv()
@@ -30,33 +30,34 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 filename = ""
 
 # ------------------------------
-# Gemini setup
+# Ollama setup (Ollama Cloud)
 # ------------------------------
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+# Uses Ollama Cloud by default. Get an API key from https://ollama.com
+# (Account -> Keys) and put it in .env as OLLAMA_API_KEY. Cloud vision models
+# are named with a "-cloud" suffix, e.g. "qwen2.5vl:7b-cloud".
+# To use a local server instead, set OLLAMA_HOST=http://localhost:11434 and
+# leave OLLAMA_API_KEY blank.
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5vl:7b-cloud")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "https://ollama.com")
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "").strip()
 try:
-    GEMINI_CLIENT = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) if os.getenv("GEMINI_API_KEY") else None
-    if GEMINI_CLIENT is None:
-        print("GEMINI_API_KEY not set - diagnosis will be disabled until it is configured.")
+    _headers = {"Authorization": f"Bearer {OLLAMA_API_KEY}"} if OLLAMA_API_KEY else None
+    OLLAMA_CLIENT = ollama.Client(host=OLLAMA_HOST, headers=_headers)
+    _auth = "with API key" if OLLAMA_API_KEY else "no API key set"
+    print(f"Ollama configured: host={OLLAMA_HOST} model={OLLAMA_MODEL} ({_auth})")
+    if not OLLAMA_API_KEY and "ollama.com" in OLLAMA_HOST:
+        print("OLLAMA_API_KEY is not set - Ollama Cloud requests will fail until "
+              "you add it to your .env file.")
 except Exception as e:
-    GEMINI_CLIENT = None
-    print(f"Gemini is unavailable: {e}")
+    OLLAMA_CLIENT = None
+    print(f"Ollama is unavailable: {e}")
 
 
 def allowed_file(fname):
     return '.' in fname and fname.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def _mime_for(path):
-    ext = path.rsplit('.', 1)[-1].lower() if '.' in path else ''
-    return {
-        'png': 'image/png',
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'webp': 'image/webp',
-    }.get(ext, 'image/jpeg')
-
-
-# The exact JSON shape we ask Gemini to return.
+# The exact JSON shape we ask the model to return.
 ANALYSIS_PROMPT = (
     "You are an expert plant pathologist analysing a photo of a plant leaf for a "
     "crop-disease detection app. Look carefully at the image and respond with ONLY a "
@@ -83,7 +84,7 @@ ANALYSIS_PROMPT = (
 
 
 def _parse_json(text):
-    """Parse Gemini's reply into a dict, tolerating stray text or code fences."""
+    """Parse the model's reply into a dict, tolerating stray text or code fences."""
     if not text:
         return None
     text = text.strip()
@@ -102,57 +103,51 @@ def _parse_json(text):
         return None
 
 
-def analyze_with_gemini(image_path):
+def analyze_with_ollama(image_path):
     """
-    Send the image to Gemini and return a normalised result dict:
+    Send the image to a local Ollama vision model and return a normalised
+    result dict:
         status: 'ok' | 'not_leaf' | 'unconfigured' | 'error'
         plus crop, disease, confidence, severity, symptoms, treatment,
         prevention, summary / message depending on status.
     """
-    if GEMINI_CLIENT is None:
+    if OLLAMA_CLIENT is None or ("ollama.com" in OLLAMA_HOST and not OLLAMA_API_KEY):
         return {"status": "unconfigured", "confidence": 0,
-                "message": "Gemini is not configured on the server. Add your "
-                           "GEMINI_API_KEY to a .env file to enable diagnosis."}
+                "message": "Ollama Cloud is not configured on the server. Add your "
+                           "OLLAMA_API_KEY to a .env file to enable diagnosis."}
 
     if not os.path.exists(image_path):
         return {"status": "error", "confidence": 0,
                 "message": "The uploaded image could not be found. Please try again."}
 
     try:
-        with open(image_path, "rb") as f:
-            image_bytes = f.read()
-
-        contents = [
-            types.Part.from_bytes(data=image_bytes, mime_type=_mime_for(image_path)),
-            ANALYSIS_PROMPT,
-        ]
-
-        # Retry transient errors (rate limits / server hiccups) with short backoff.
+        # Retry transient errors (server starting up / model loading) with backoff.
         response = None
-        last_error = None
         for attempt in range(3):
             try:
-                response = GEMINI_CLIENT.models.generate_content(
-                    model=GEMINI_MODEL, contents=contents)
+                response = OLLAMA_CLIENT.chat(
+                    model=OLLAMA_MODEL,
+                    messages=[{
+                        "role": "user",
+                        "content": ANALYSIS_PROMPT,
+                        "images": [image_path],
+                    }],
+                    format="json",  # ask Ollama to return strict JSON
+                    options={"temperature": 0},
+                )
                 break
             except Exception as e:
-                last_error = e
-                code = getattr(e, "code", None)
-                if code in (429, 500, 503) and attempt < 2:
+                if attempt < 2:
                     time.sleep(2 * (attempt + 1))
                     continue
                 raise
 
-        data = _parse_json(getattr(response, "text", None))
+        text = (response or {}).get("message", {}).get("content")
+        data = _parse_json(text)
     except Exception as e:
-        code = getattr(e, "code", None)
-        print(f"Gemini analysis failed (code={code}): {e}", flush=True)
-        if code == 429:
-            msg = ("The AI service is busy right now (rate limit reached). "
-                   "Please wait a moment and try again.")
-        else:
-            msg = ("The AI service could not analyse this image right now. "
-                   "Please check your internet connection and try again.")
+        print(f"Ollama analysis failed: {e}", flush=True)
+        msg = ("The AI model could not analyse this image right now. "
+               "Please check your Ollama Cloud API key and connection, then try again.")
         return {"status": "error", "confidence": 0, "message": msg}
 
     if not isinstance(data, dict):
@@ -203,14 +198,14 @@ def input():
     return render_template("input.html")
 
 
-# Cache of the most recent analysis so re-viewing /display does not call Gemini again.
+# Cache of the most recent analysis so re-viewing /display does not call Ollama again.
 _last = {"filename": None, "result": None}
 
 
 def analyze_and_cache(fname):
-    """Analyse a saved file with Gemini and remember the result for /display."""
+    """Analyse a saved file with Ollama and remember the result for /display."""
     image_path = os.path.join(app.config['UPLOAD_FOLDER'], fname)
-    result = analyze_with_gemini(image_path)
+    result = analyze_with_ollama(image_path)
     # Only cache meaningful results. A transient 'error' (rate limit / network)
     # is not cached, so re-opening /display will retry instead of showing a stale error.
     if result.get("status") != "error":
@@ -240,7 +235,7 @@ def upload():
         filename = secure_filename(file.filename)
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(save_path)
-        result = analyze_and_cache(filename)  # fresh upload -> one Gemini call
+        result = analyze_and_cache(filename)  # fresh upload -> one Ollama call
         return render_template('display.html', variable_name=filename, **result)
     else:
         flash("Allowed image types are - png, jpg, jpeg, webp.")
@@ -252,7 +247,7 @@ def display_image():
     if not filename:
         flash("No image to display.")
         return redirect('/input')
-    # Reuse the cached result for the current image instead of calling Gemini again.
+    # Reuse the cached result for the current image instead of calling Ollama again.
     if _last["filename"] == filename and _last["result"] is not None:
         result = _last["result"]
     else:

@@ -5,8 +5,11 @@ services:
     plan: free
     dockerfilePath: ./Dockerfile
     envVars:
-      # Set the actual value in the Render dashboard (Environment tab) - never commit it.
-      - key: GEMINI_API_KEY
+      # Diagnosis uses Ollama Cloud over HTTP. Set OLLAMA_API_KEY in the Render
+      # dashboard (Environment tab) - never commit it.
+      - key: OLLAMA_HOST
+        value: https://ollama.com
+      - key: OLLAMA_API_KEY
         sync: false
-      - key: GEMINI_MODEL
-        value: gemini-flash-latest
+      - key: OLLAMA_MODEL
+        value: gemma4:31b

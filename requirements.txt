@@ -6,8 +6,8 @@ MarkupSafe>=2.0.1
 click>=8.0.3
 itsdangerous>=2.0.1
 
-# AI diagnosis (Google Gemini)
-google-genai>=1.0.0
+# AI diagnosis (local Ollama vision model)
+ollama>=0.3.0
 python-dotenv>=1.0.0
 
 # Production WSGI server

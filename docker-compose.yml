@@ -1,0 +1,18 @@
+services:
+  web:
+    build: .
+    image: crop-disease-detection
+    container_name: crop-disease-detection
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    # Reads OLLAMA_HOST / OLLAMA_API_KEY / OLLAMA_MODEL from your local .env
+    # (kept out of the image by .dockerignore). Copy .env.example to .env first.
+    env_file:
+      - .env
+    # Persist uploaded images across container restarts (optional).
+    volumes:
+      - uploads:/app/static/shots
+
+volumes:
+  uploads:
