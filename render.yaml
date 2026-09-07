@@ -4,7 +4,9 @@ services:
     runtime: docker
     plan: free
     dockerfilePath: ./Dockerfile
-    gitLfsEnabled: true
     envVars:
-      - key: RENDER
-        value: "true"
+      # Set the actual value in the Render dashboard (Environment tab) - never commit it.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-flash-latest

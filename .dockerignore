@@ -6,13 +6,13 @@ __pycache__/
 .dockerignore
 Dockerfile
 
-# Unused model files (only best_model.h5 is needed)
-best_model_cont.h5
-final_model_after_resume.h5
-model_0.h5
+# Model files - no longer used (diagnosis is done via the Gemini API)
+*.h5
 
 # Training data & scripts (not needed for serving)
 Main_folder/
+camera.py
+inspect_model.py
 
 # Runtime-generated uploads
 static/shots/*.png
