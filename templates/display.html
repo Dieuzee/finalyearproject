@@ -183,6 +183,54 @@
       .details ul {
         margin-left: 1.2rem;
       }
+      .gemini-guidance {
+        white-space: pre-line;
+        border-left: 3px solid var(--accent);
+        padding: 0.8rem 0 0.8rem 1rem;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+      .gemini-guidance strong {
+        display: block;
+        margin-bottom: 0.4rem;
+        color: var(--accent-dark);
+      }
+      .treatment {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        background: rgba(0, 210, 168, 0.08);
+        border-radius: 12px;
+        padding: 0.9rem 1.1rem;
+      }
+      .treatment strong {
+        color: var(--accent-dark);
+      }
+      .notice {
+        border-radius: 16px;
+        padding: 1.4rem 1.5rem;
+        background: rgba(255, 59, 92, 0.06);
+        border: 1px solid rgba(255, 59, 92, 0.25);
+      }
+      .notice-uncertain {
+        background: rgba(255, 176, 32, 0.08);
+        border-color: rgba(255, 176, 32, 0.35);
+      }
+      .notice-title {
+        font-weight: 800;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+      }
+      .notice-body {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--muted);
+      }
+      .disclaimer {
+        font-size: 0.78rem;
+        line-height: 1.5;
+        color: var(--muted);
+        opacity: 0.85;
+      }
       .btn {
         align-self: flex-start;
         margin-top: 0.5rem;
@@ -224,7 +272,8 @@
     <main
       class="card"
       id="card-root"
-      data-label="{{ label|default('unknown') }}"
+      data-status="{{ status|default('error') }}"
+      data-label="{{ label|default('') }}"
       data-confidence="{{ confidence|default(0) }}"
     >
       <!--  Image side  -->
@@ -243,6 +292,8 @@
           <h1>Crop<span style="color: var(--accent)">Scan</span></h1>
         </div>
 
+        {% if status == 'ok' %}
+        <!--  Confident diagnosis  -->
         <div>
           <div class="confidence-and-label-container">
             <div class="label">
@@ -251,7 +302,7 @@
                   d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
                 />
               </svg>
-              <span id="label-name">{{ label }}</span>
+              <span id="label-name">{{ crop }} — {{ disease }}</span>
             </div>
             <div class="badge" id="confidence-badge">
               {{ (confidence|float)|round(2) }}%
@@ -260,7 +311,37 @@
           <div class="progress"><i id="bar"></i></div>
         </div>
 
+        {% if treatment %}
+        <div class="treatment">
+          <strong>Recommended action:</strong> {{ treatment }}
+        </div>
+        {% endif %}
+
+        {% if gemini_guidance %}
+        <div class="gemini-guidance" id="gemini-guidance">
+          <strong>AI assistant notes</strong>
+          {{ gemini_guidance }}
+        </div>
+        {% endif %}
+
         <div class="details" id="details">Loading details…</div>
+
+        {% else %}
+        <!--  Not a leaf / uncertain / error  -->
+        <div class="notice notice-{{ status }}">
+          <div class="notice-title">
+            {% if status == 'not_leaf' %}This doesn't look like a crop leaf
+            {% elif status == 'uncertain' %}Not confident about this image
+            {% else %}Something went wrong{% endif %}
+          </div>
+          <p class="notice-body">{{ message }}</p>
+        </div>
+        {% endif %}
+
+        <p class="disclaimer">
+          This tool recognises diseases of corn, grape, and tomato leaves only.
+          Results are AI estimates — confirm with a local agronomist before treating crops.
+        </p>
 
         <button class="btn" onclick="window.location.href='/input'">
           ← Scan Another
@@ -399,10 +480,14 @@
       /* ---------- Populate ---------- */
       (() => {
         const root = document.getElementById("card-root");
+        const status = root.dataset.status;
         const label = root.dataset.label;
         const conf = parseFloat(root.dataset.confidence || "0");
         const bar = document.getElementById("bar");
         const details = document.getElementById("details");
+
+        // These elements only exist for a confident ('ok') result.
+        if (status !== "ok" || !bar || !details) return;
 
         // Animate progress
         bar.style.width =
