@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from flask import Flask, render_template, request, flash, redirect
 from werkzeug.utils import secure_filename
 import google.genai as genai
@@ -31,7 +32,7 @@ filename = ""
 # ------------------------------
 # Gemini setup
 # ------------------------------
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 try:
     GEMINI_CLIENT = genai.Client(api_key=os.getenv("GEMINI_API_KEY")) if os.getenv("GEMINI_API_KEY") else None
     if GEMINI_CLIENT is None:
@@ -121,19 +122,38 @@ def analyze_with_gemini(image_path):
         with open(image_path, "rb") as f:
             image_bytes = f.read()
 
-        response = GEMINI_CLIENT.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[
-                types.Part.from_bytes(data=image_bytes, mime_type=_mime_for(image_path)),
-                ANALYSIS_PROMPT,
-            ],
-        )
+        contents = [
+            types.Part.from_bytes(data=image_bytes, mime_type=_mime_for(image_path)),
+            ANALYSIS_PROMPT,
+        ]
+
+        # Retry transient errors (rate limits / server hiccups) with short backoff.
+        response = None
+        last_error = None
+        for attempt in range(3):
+            try:
+                response = GEMINI_CLIENT.models.generate_content(
+                    model=GEMINI_MODEL, contents=contents)
+                break
+            except Exception as e:
+                last_error = e
+                code = getattr(e, "code", None)
+                if code in (429, 500, 503) and attempt < 2:
+                    time.sleep(2 * (attempt + 1))
+                    continue
+                raise
+
         data = _parse_json(getattr(response, "text", None))
     except Exception as e:
-        print(f"Gemini analysis failed: {e}")
-        return {"status": "error", "confidence": 0,
-                "message": "The AI service could not analyse this image right now. "
-                           "Please check your internet connection and try again."}
+        code = getattr(e, "code", None)
+        print(f"Gemini analysis failed (code={code}): {e}", flush=True)
+        if code == 429:
+            msg = ("The AI service is busy right now (rate limit reached). "
+                   "Please wait a moment and try again.")
+        else:
+            msg = ("The AI service could not analyse this image right now. "
+                   "Please check your internet connection and try again.")
+        return {"status": "error", "confidence": 0, "message": msg}
 
     if not isinstance(data, dict):
         return {"status": "error", "confidence": 0,
