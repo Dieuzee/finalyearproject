@@ -1,0 +1,53 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram name="BID CROP Architecture" id="bidcrop-arch">
+    <mxGraphModel dx="900" dy="700" grid="1" gridSize="10" guides="1" tooltips="1"
+        connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1150"
+        pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="n11" value="PRESENTATION TIER  (client / browser)" style="rounded=1;fillColor=#F0FDF4;strokeColor=#86EFAC;dashed=1;html=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;fontStyle=1;fontColor=#15803D;fontSize=12;" vertex="1" parent="1"><mxGeometry x="40" y="70" width="1040" height="150" as="geometry"/></mxCell>
+        <mxCell id="n12" value="APPLICATION TIER  (Flask web server · WSGI: gunicorn)" style="rounded=1;fillColor=#ECFDF5;strokeColor=#16A34A;dashed=1;html=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;fontStyle=1;fontColor=#14532D;fontSize=12;" vertex="1" parent="1"><mxGeometry x="40" y="250" width="1040" height="220" as="geometry"/></mxCell>
+        <mxCell id="n13" value="DATA TIER  &amp;  EXTERNAL SERVICE" style="rounded=1;fillColor=#F7F6F0;strokeColor=#CBD5CF;dashed=1;html=1;verticalAlign=top;align=left;spacingLeft=12;spacingTop=8;fontStyle=1;fontColor=#51625A;fontSize=12;" vertex="1" parent="1"><mxGeometry x="40" y="500" width="1040" height="200" as="geometry"/></mxCell>
+        <mxCell id="n14" value="BID CROP — System Architecture" style="text;html=1;align=left;verticalAlign=middle;fontSize=17;fontStyle=1;fontColor=#14532D;" vertex="1" parent="1"><mxGeometry x="40" y="24" width="700" height="30" as="geometry"/></mxCell>
+        <mxCell id="n15" value="Web Browser
+
+Pages: Landing · Upload + Camera · Results · History
+Client JS: drag-and-drop, getUserMedia camera, mobile nav" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#22C55E;fontColor=#1A1A1A;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="300" y="105" width="520" height="95" as="geometry"/></mxCell>
+        <mxCell id="n16" value="Flask Web Server — app.py" style="rounded=1;html=1;fillColor=#FFFFFF;strokeColor=#16A34A;fontColor=#14532D;fontStyle=1;fontSize=13;verticalAlign=top;align=center;spacingTop=8;" vertex="1" parent="1"><mxGeometry x="130" y="275" width="860" height="175" as="geometry"/></mxCell>
+        <mxCell id="n17" value="Routing / Controllers
+
+/ · /input · /upload
+/display · /history
+/scan/&lt;id&gt; · delete · clear" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#86EFAC;fontColor=#1A1A1A;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="160" y="320" width="240" height="115" as="geometry"/></mxCell>
+        <mxCell id="n18" value="Business Logic
+
+validation · prompt building
+JSON parsing · leaf gate
+result cache" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#86EFAC;fontColor=#1A1A1A;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="420" y="320" width="240" height="115" as="geometry"/></mxCell>
+        <mxCell id="n19" value="Ollama Integration
+
+ollama client
+(HTTPS to Ollama Cloud)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#86EFAC;fontColor=#1A1A1A;fontSize=12;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="680" y="320" width="240" height="115" as="geometry"/></mxCell>
+        <mxCell id="n20" value="SQLite Database
+scans.db
+(scans table)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=14;fillColor=#FFFFFF;strokeColor=#0369A1;fontColor=#0C4A6E;fontSize=12;" vertex="1" parent="1"><mxGeometry x="150" y="545" width="210" height="110" as="geometry"/></mxCell>
+        <mxCell id="n21" value="File Storage
+static/shots/
+(uploaded images)" style="shape=folder;html=1;whiteSpace=wrap;fillColor=#FFFFFF;strokeColor=#B7791F;fontColor=#7C4A03;fontSize=12;verticalAlign=top;spacingTop=6;" vertex="1" parent="1"><mxGeometry x="430" y="545" width="210" height="110" as="geometry"/></mxCell>
+        <mxCell id="n22" value="Ollama Cloud
+Vision model
+qwen2.5vl:7b-cloud
+(external AI service)" style="ellipse;shape=cloud;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#EA580C;fontColor=#9A3412;fontSize=12;" vertex="1" parent="1"><mxGeometry x="770" y="535" width="250" height="120" as="geometry"/></mxCell>
+        <mxCell id="n23" value="HTTP request /
+HTML response" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;fontColor=#334155;endArrow=classic;startArrow=classic;strokeColor=#475569;" edge="1" parent="1" source="n15" target="n16"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="n24" value="save / read
+image" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;fontColor=#334155;endArrow=classic;startArrow=classic;strokeColor=#475569;" edge="1" parent="1" source="n18" target="n21"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="n25" value="save_scan() /
+query_scans()" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;fontColor=#334155;endArrow=classic;startArrow=classic;strokeColor=#475569;" edge="1" parent="1" source="n18" target="n20"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="n26" value="image + prompt /
+JSON diagnosis (HTTPS)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;fontSize=11;fontColor=#334155;endArrow=classic;startArrow=classic;strokeColor=#475569;" edge="1" parent="1" source="n19" target="n22"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
