@@ -11,7 +11,7 @@
     font-family: var(--font);
     color: var(--ink);
   }
-  .history-head { margin-bottom: 28px; }
+  .history-head { margin-bottom: 24px; }
   .history-head h1 {
     font-family: var(--display);
     font-size: 2rem;
@@ -21,12 +21,19 @@
   }
   .history-head p { color: var(--slate); font-size: 0.98rem; }
 
+  /* Flash */
+  .flash {
+    background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534;
+    padding: 10px 14px; border-radius: 10px; font-size: 0.9rem;
+    margin-bottom: 18px;
+  }
+
   /* Stats */
   .stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
-    margin-bottom: 34px;
+    margin-bottom: 26px;
   }
   .stat {
     background: var(--surface);
@@ -42,12 +49,29 @@
     color: var(--forest);
     line-height: 1.1;
   }
-  .stat .lbl {
-    font-size: 0.8rem;
-    color: var(--slate);
-    margin-top: 4px;
-    letter-spacing: 0.02em;
+  .stat .lbl { font-size: 0.8rem; color: var(--slate); margin-top: 4px; letter-spacing: 0.02em; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-bottom: 22px;
   }
+  .toolbar input[type="search"], .toolbar select {
+    font-family: var(--font); font-size: 0.9rem; color: var(--ink);
+    padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+    background: var(--surface); outline: none;
+  }
+  .toolbar input[type="search"] { flex: 1; min-width: 180px; }
+  .toolbar input[type="search"]:focus, .toolbar select:focus { border-color: var(--green); }
+  .toolbar .btn {
+    font-family: var(--font); font-weight: 600; font-size: 0.9rem; cursor: pointer;
+    padding: 10px 18px; border-radius: 10px; border: none; color: #fff;
+    background: linear-gradient(135deg, var(--green), var(--forest));
+  }
+  .toolbar .btn-clear {
+    background: #fff; color: #b91c1c; border: 1px solid #fecaca; margin-left: auto;
+  }
+  .result-count { color: var(--slate); font-size: 0.85rem; margin-bottom: 14px; }
 
   /* Scan grid */
   .scan-grid {
@@ -56,6 +80,7 @@
     gap: 20px;
   }
   .scan-card {
+    position: relative;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -66,42 +91,17 @@
     flex-direction: column;
   }
   .scan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-  .scan-thumb {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-    background: #eef0ea;
-  }
-  .scan-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
-  .scan-title {
-    font-weight: 700;
-    font-size: 1rem;
-    color: var(--ink);
-    line-height: 1.3;
-  }
-  .scan-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 8px;
-  }
+  .scan-link { display: flex; flex-direction: column; flex: 1; color: inherit; }
+  .scan-thumb { width: 100%; height: 160px; object-fit: cover; background: #eef0ea; }
+  .scan-body { padding: 14px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+  .scan-title { font-weight: 700; font-size: 1rem; color: var(--ink); line-height: 1.3; }
+  .scan-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
   .conf-badge {
-    font-size: 0.78rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 999px;
-    color: #fff;
-    background: linear-gradient(90deg, var(--green), var(--forest));
+    font-size: 0.78rem; font-weight: 700; padding: 3px 10px; border-radius: 999px;
+    color: #fff; background: linear-gradient(90deg, var(--green), var(--forest));
   }
   .conf-badge.healthy { background: linear-gradient(90deg, #3ddc84, #17a866); }
-  .pill {
-    font-size: 0.74rem;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 999px;
-    border: 1px solid var(--slate);
-    color: var(--slate);
-  }
+  .pill { font-size: 0.74rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--slate); color: var(--slate); }
   .pill.sev-Mild { color: var(--forest); border-color: var(--forest); }
   .pill.sev-Moderate { color: #b7791f; border-color: #b7791f; }
   .pill.sev-Severe { color: #d33; border-color: #d33; }
@@ -109,13 +109,27 @@
   .scan-summary { font-size: 0.85rem; color: var(--slate); line-height: 1.5; }
   .scan-date { font-size: 0.75rem; color: var(--slate); opacity: 0.8; margin-top: 2px; }
 
-  /* Empty state */
+  .scan-actions { padding: 0 16px 14px; }
+  .btn-del {
+    width: 100%; font-family: var(--font); font-size: 0.82rem; font-weight: 600;
+    color: #b91c1c; background: #fff; border: 1px solid #fecaca; border-radius: 9px;
+    padding: 8px; cursor: pointer; transition: background 0.18s;
+  }
+  .btn-del:hover { background: #fef2f2; }
+
+  /* Pagination */
+  .pager { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 34px; }
+  .pager a {
+    padding: 9px 16px; border-radius: 10px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--forest); font-weight: 600; font-size: 0.88rem;
+  }
+  .pager a:hover { border-color: var(--green); }
+  .pager span { color: var(--slate); font-size: 0.88rem; }
+
+  /* Empty / no-results states */
   .empty {
-    text-align: center;
-    padding: 70px 20px;
-    background: var(--surface);
-    border: 1px dashed var(--border);
-    border-radius: 16px;
+    text-align: center; padding: 70px 20px; background: var(--surface);
+    border: 1px dashed var(--border); border-radius: 16px;
   }
   .empty h3 { font-family: var(--display); font-size: 1.3rem; color: var(--ink); margin-bottom: 8px; }
   .empty p { color: var(--slate); margin-bottom: 20px; }
@@ -123,16 +137,30 @@
 
   @media (max-width: 720px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
+    .toolbar .btn-clear { margin-left: 0; }
   }
 </style>
 
 <div class="history-wrap">
   <div class="history-head">
     <h1>Scan history</h1>
-    <p>Every diagnosis you run is saved here, newest first.</p>
+    <p>Every diagnosis you run is saved here.</p>
   </div>
 
-  {% if scans %}
+  {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if stats.total == 0 %}
+  <div class="empty">
+    <h3>No scans yet</h3>
+    <p>Once you diagnose a leaf, it will show up here.</p>
+    <a href="/input" class="btn-cta">Diagnose a leaf</a>
+  </div>
+  {% else %}
+
   <div class="stats">
     <div class="stat"><div class="num">{{ stats.total }}</div><div class="lbl">Total scans</div></div>
     <div class="stat"><div class="num">{{ stats.diseased }}</div><div class="lbl">Diseased leaves</div></div>
@@ -140,37 +168,85 @@
     <div class="stat"><div class="num" style="font-size:1.05rem;">{{ stats.top_disease or '—' }}</div><div class="lbl">Most common disease</div></div>
   </div>
 
+  <form class="toolbar" method="GET" action="/history">
+    <input type="search" name="q" value="{{ search }}" placeholder="Search crop, disease or summary…" />
+    <select name="condition">
+      <option value="all" {% if condition == 'all' %}selected{% endif %}>All results</option>
+      <option value="diseased" {% if condition == 'diseased' %}selected{% endif %}>Diseased</option>
+      <option value="healthy" {% if condition == 'healthy' %}selected{% endif %}>Healthy</option>
+      <option value="rejected" {% if condition == 'rejected' %}selected{% endif %}>Not a leaf</option>
+    </select>
+    <select name="sort">
+      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest first</option>
+      <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+      <option value="confidence" {% if sort == 'confidence' %}selected{% endif %}>Highest confidence</option>
+    </select>
+    <button type="submit" class="btn">Apply</button>
+    <button type="submit" formmethod="POST" formaction="/history/clear" class="btn btn-clear"
+            onclick="return confirm('Delete ALL saved scans? This cannot be undone.');">
+      Clear all
+    </button>
+  </form>
+
+  {% if scans %}
+  <div class="result-count">
+    Showing {{ scans|length }} of {{ total }} matching scan{{ '' if total == 1 else 's' }}.
+  </div>
+
   <div class="scan-grid">
     {% for s in scans %}
     <div class="scan-card">
-      <img class="scan-thumb"
-           src="{{ url_for('static', filename='shots/' ~ s.image_filename) }}"
-           alt="Scanned leaf" loading="lazy" />
-      <div class="scan-body">
-        {% if s.status == 'ok' %}
-        <div class="scan-title">{{ s.crop }} — {{ s.disease }}</div>
-        <div class="scan-meta">
-          <span class="conf-badge {% if s.healthy %}healthy{% endif %}">{{ s.confidence }}%</span>
-          {% if s.severity and s.severity|lower != 'none' %}
-          <span class="pill sev-{{ s.severity }}">{{ s.severity }}</span>
+      <a class="scan-link" href="/scan/{{ s.id }}">
+        <img class="scan-thumb"
+             src="{{ url_for('static', filename='shots/' ~ s.image_filename) }}"
+             alt="Scanned leaf" loading="lazy" />
+        <div class="scan-body">
+          {% if s.status == 'ok' %}
+          <div class="scan-title">{{ s.crop }} — {{ s.disease }}</div>
+          <div class="scan-meta">
+            <span class="conf-badge {% if s.healthy %}healthy{% endif %}">{{ s.confidence }}%</span>
+            {% if s.severity and s.severity|lower != 'none' %}
+            <span class="pill sev-{{ s.severity }}">{{ s.severity }}</span>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="scan-title">Not a leaf</div>
+          <div class="scan-meta"><span class="pill rejected">Rejected</span></div>
           {% endif %}
+          {% if s.summary %}<div class="scan-summary">{{ s.summary }}</div>{% endif %}
+          <div class="scan-date">{{ s.created_at }}</div>
         </div>
-        {% else %}
-        <div class="scan-title">Not a leaf</div>
-        <div class="scan-meta"><span class="pill rejected">Rejected</span></div>
-        {% endif %}
-        {% if s.summary %}<div class="scan-summary">{{ s.summary }}</div>{% endif %}
-        <div class="scan-date">{{ s.created_at }}</div>
+      </a>
+      <div class="scan-actions">
+        <form method="POST" action="/scan/{{ s.id }}/delete"
+              onsubmit="return confirm('Delete this scan?');">
+          <button type="submit" class="btn-del">Delete</button>
+        </form>
       </div>
     </div>
     {% endfor %}
   </div>
+
+  {% if total_pages > 1 %}
+  <div class="pager">
+    {% if page > 1 %}
+    <a href="{{ url_for('history', q=search, condition=condition, sort=sort, page=page-1) }}">← Prev</a>
+    {% endif %}
+    <span>Page {{ page }} of {{ total_pages }}</span>
+    {% if page < total_pages %}
+    <a href="{{ url_for('history', q=search, condition=condition, sort=sort, page=page+1) }}">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
   {% else %}
   <div class="empty">
-    <h3>No scans yet</h3>
-    <p>Once you diagnose a leaf, it will show up here.</p>
-    <a href="/input" class="btn-cta">Diagnose a leaf</a>
+    <h3>No matching scans</h3>
+    <p>No saved scans match your search or filters.</p>
+    <a href="/history" class="btn-cta">Clear filters</a>
   </div>
+  {% endif %}
+
   {% endif %}
 </div>
 

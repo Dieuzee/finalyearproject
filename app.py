@@ -267,12 +267,60 @@ def display_image():
     return render_template('display.html', variable_name=filename, **result)
 
 
+PER_PAGE = 12  # scans shown per history page
+
+
 @app.route('/history')
 def history():
-    """Show every saved diagnosis, newest first, with a small stats summary."""
-    scans = db.get_all_scans()
+    """Show saved diagnoses with search, filtering, sorting and pagination."""
+    search = request.args.get('q', '').strip()
+    condition = request.args.get('condition', 'all')
+    sort = request.args.get('sort', 'newest')
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+    except (TypeError, ValueError):
+        page = 1
+
+    scans, total = db.query_scans(
+        search=search, condition=condition, sort=sort,
+        limit=PER_PAGE, offset=(page - 1) * PER_PAGE,
+    )
+    total_pages = max(1, (total + PER_PAGE - 1) // PER_PAGE)
     stats = db.get_stats()
-    return render_template('history.html', scans=scans, stats=stats)
+
+    return render_template(
+        'history.html', scans=scans, stats=stats, total=total,
+        search=search, condition=condition, sort=sort,
+        page=page, total_pages=total_pages,
+    )
+
+
+@app.route('/scan/<int:scan_id>')
+def scan_detail(scan_id):
+    """Reopen a saved diagnosis on the full results page."""
+    row = db.get_scan(scan_id)
+    if not row:
+        flash("That scan could not be found.")
+        return redirect('/history')
+    result = dict(row)
+    # The results template shows {{ message }} for non-ok outcomes.
+    if result.get('status') != 'ok':
+        result['message'] = result.get('summary') or ''
+    return render_template('display.html', variable_name=row['image_filename'], **result)
+
+
+@app.route('/scan/<int:scan_id>/delete', methods=['POST'])
+def delete_scan_route(scan_id):
+    db.delete_scan(scan_id)
+    flash("Scan deleted.")
+    return redirect('/history')
+
+
+@app.route('/history/clear', methods=['POST'])
+def clear_history():
+    db.clear_scans()
+    flash("Scan history cleared.")
+    return redirect('/history')
 
 
 if __name__ == "__main__":

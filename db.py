@@ -88,6 +88,72 @@ def get_all_scans(limit=200):
     return [dict(row) for row in rows]
 
 
+def get_scan(scan_id):
+    """Return a single scan by id, or None if it does not exist."""
+    with get_connection() as conn:
+        row = conn.execute("SELECT * FROM scans WHERE id = ?", (scan_id,)).fetchone()
+    return dict(row) if row else None
+
+
+def delete_scan(scan_id):
+    """Delete one scan by id. Returns the number of rows removed (0 or 1)."""
+    with get_connection() as conn:
+        cur = conn.execute("DELETE FROM scans WHERE id = ?", (scan_id,))
+        return cur.rowcount
+
+
+def clear_scans():
+    """Delete every scan. Returns the number of rows removed."""
+    with get_connection() as conn:
+        cur = conn.execute("DELETE FROM scans")
+        return cur.rowcount
+
+
+# Sort options exposed to the history page: label -> SQL ORDER BY clause.
+_SORTS = {
+    "newest": "datetime(created_at) DESC, id DESC",
+    "oldest": "datetime(created_at) ASC, id ASC",
+    "confidence": "confidence DESC, id DESC",
+}
+
+
+def query_scans(search="", condition="all", sort="newest", limit=12, offset=0):
+    """
+    Search, filter, sort and paginate scans.
+
+    - search:    matches crop / disease / summary (case-insensitive)
+    - condition: 'all' | 'diseased' | 'healthy' | 'rejected'
+    - sort:      'newest' | 'oldest' | 'confidence'
+    Returns (rows, total_matching_count).
+    """
+    where, params = [], []
+
+    if search:
+        where.append("(crop LIKE ? OR disease LIKE ? OR summary LIKE ?)")
+        like = f"%{search}%"
+        params += [like, like, like]
+
+    if condition == "diseased":
+        where.append("status = 'ok' AND healthy = 0")
+    elif condition == "healthy":
+        where.append("status = 'ok' AND healthy = 1")
+    elif condition == "rejected":
+        where.append("status = 'not_leaf'")
+
+    where_sql = ("WHERE " + " AND ".join(where)) if where else ""
+    order_sql = _SORTS.get(sort, _SORTS["newest"])
+
+    with get_connection() as conn:
+        total = conn.execute(
+            f"SELECT COUNT(*) FROM scans {where_sql}", params
+        ).fetchone()[0]
+        rows = conn.execute(
+            f"SELECT * FROM scans {where_sql} ORDER BY {order_sql} LIMIT ? OFFSET ?",
+            params + [limit, offset],
+        ).fetchall()
+    return [dict(row) for row in rows], total
+
+
 def get_stats():
     """Return simple headline numbers for the history page."""
     with get_connection() as conn:
