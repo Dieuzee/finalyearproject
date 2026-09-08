@@ -38,11 +38,11 @@ filename = ""
 # Ollama setup (Ollama Cloud)
 # ------------------------------
 # Uses Ollama Cloud by default. Get an API key from https://ollama.com
-# (Account -> Keys) and put it in .env as OLLAMA_API_KEY. Cloud vision models
-# are named with a "-cloud" suffix, e.g. "qwen2.5vl:7b-cloud".
+# (Account -> Keys) and put it in .env as OLLAMA_API_KEY. Pick a cloud vision
+# model from https://ollama.com/search?c=cloud (e.g. "gemma4").
 # To use a local server instead, set OLLAMA_HOST=http://localhost:11434 and
 # leave OLLAMA_API_KEY blank.
-OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen2.5vl:7b-cloud")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gemma4")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "https://ollama.com")
 OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY", "").strip()
 try:
