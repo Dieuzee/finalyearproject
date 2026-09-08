@@ -5,6 +5,8 @@ from flask import Flask, render_template, request, flash, redirect
 from werkzeug.utils import secure_filename
 import ollama
 
+import db
+
 # Load environment variables from a local .env file if present (optional).
 # This is where the Ollama settings live - the app uses a local Ollama
 # vision model for all diagnosis.
@@ -25,6 +27,9 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# Create the scans database/table on startup (safe to run every time).
+db.init_db()
 
 # Last uploaded filename (used by the /display route)
 filename = ""
@@ -236,6 +241,13 @@ def upload():
         save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(save_path)
         result = analyze_and_cache(filename)  # fresh upload -> one Ollama call
+        # Save every real diagnosis to the database (skip transient failures
+        # like network/'error' or an unconfigured API key).
+        if result.get("status") in ("ok", "not_leaf"):
+            try:
+                db.save_scan(filename, result, model_used=OLLAMA_MODEL)
+            except Exception as e:
+                print(f"Could not save scan to database: {e}", flush=True)
         return render_template('display.html', variable_name=filename, **result)
     else:
         flash("Allowed image types are - png, jpg, jpeg, webp.")
@@ -253,6 +265,14 @@ def display_image():
     else:
         result = analyze_and_cache(filename)
     return render_template('display.html', variable_name=filename, **result)
+
+
+@app.route('/history')
+def history():
+    """Show every saved diagnosis, newest first, with a small stats summary."""
+    scans = db.get_all_scans()
+    stats = db.get_stats()
+    return render_template('history.html', scans=scans, stats=stats)
 
 
 if __name__ == "__main__":

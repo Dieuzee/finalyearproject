@@ -17,3 +17,5 @@ static/shots/*.png
 static/shots/*.jpg
 static/shots/*.jpeg
 static/shots/*.gif
+# SQLite scan history database (local data)
+scans.db
