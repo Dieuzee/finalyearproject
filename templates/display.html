@@ -250,6 +250,11 @@
         body { padding: 1rem; }
         .image { height: 240px; }
         .info { padding: 2rem 1.5rem; }
+        /* Let the crop/disease title and the confidence badge stack instead of
+           squeezing onto one line on narrow phones. */
+        .confidence-and-label-container { flex-wrap: wrap; gap: 0.6rem; }
+        .label { font-size: 1.15rem; }
+        .btn { align-self: stretch; text-align: center; }
       }
     </style>
   </head>

@@ -17,7 +17,7 @@ Then edit `.env`:
 ```
 OLLAMA_HOST=https://ollama.com
 OLLAMA_API_KEY=your_ollama_cloud_key
-OLLAMA_MODEL=gemma4:31b
+OLLAMA_MODEL=qwen2.5vl:7b-cloud
 ```
 
 `.env` is git-ignored and Docker-ignored, so your key is never committed or

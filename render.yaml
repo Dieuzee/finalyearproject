@@ -12,4 +12,4 @@ services:
       - key: OLLAMA_API_KEY
         sync: false
       - key: OLLAMA_MODEL
-        value: gemma4:31b
+        value: qwen2.5vl:7b-cloud
